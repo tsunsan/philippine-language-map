@@ -38,7 +38,6 @@ export default function Map({ selectedLayer }: { selectedLayer: string }) {
             data,
           });
 
-          // Add the fill layer for regions
           map.addLayer({
             id: "geojson-layer",
             type: "fill",
