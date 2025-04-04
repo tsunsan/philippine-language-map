@@ -17,13 +17,45 @@ export default function Sidebar({ setSelectedLayer }: { setSelectedLayer: (layer
           </TabsList>
           <TabsContent value="country">
             <div className="flex items-center space-x-2">
-              <Checkbox  
-                  className="peer border-input bg-blue-500 border-blue-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-600 focus-visible:ring-blue-400 size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50" defaultChecked />
-              <Label className="text-white text-sm font-semibold">Filipino</Label> 
+              <Checkbox color="tagalog" defaultChecked />
+                  <Label className="text-white text-sm font-semibold">Tagalog</Label> 
             </div>
           </TabsContent>
           <TabsContent value="regions">
-            <p className="text-sm text-gray-300">Content for Tab 2</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox color="tagalog" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Tagalog</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox color="hiligaynon" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Hiligaynon</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox color="ilocano" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Ilocano</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox color="bikol" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Bikol</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox color="cebuano" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Cebuano</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox color="bisaya" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Bisaya</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox color="waray" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Waray</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox color="tausug" defaultChecked />
+                <Label className="text-white text-sm font-semibold">Tausug</Label>
+              </div>
+            </div>
           </TabsContent>
           <TabsContent value="provinces">
             <p className="text-sm text-gray-300">Content for Tab 3</p>
