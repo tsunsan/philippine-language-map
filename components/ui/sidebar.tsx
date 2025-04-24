@@ -58,7 +58,8 @@ export default function Sidebar({ setSelectedLayer }: { setSelectedLayer: (layer
             </div>
           </TabsContent>
           <TabsContent value="provinces">
-            <p className="text-sm text-gray-300">Content for Tab 3</p>
+            <p className="text-sm text-gray-300">[Advanced Filters - Coming Soon]
+</p>
           </TabsContent>
         </Tabs>
       </Card>

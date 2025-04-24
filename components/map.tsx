@@ -1,13 +1,30 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl, { Map as MapLibre } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-export default function Map({ selectedLayer }: { selectedLayer: string }) {
+/**
+ * Map Component
+ * Displays an interactive map using MapLibre GL with GeoJSON layers.
+ *
+ * Props:
+ * - selectedLayer: The name of the GeoJSON layer to load.
+ * - onTileClick: Callback function triggered when a map tile is clicked.
+ */
+export default function Map({
+  selectedLayer,
+  onTileClick,
+}: {
+  selectedLayer: string;
+  onTileClick: (data: any) => void;
+}) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<MapLibre | null>(null);
+  const [focusedRegion, setFocusedRegion] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true); // Track loading state
 
+  // Initializing the map using the dark theme json
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -21,12 +38,14 @@ export default function Map({ selectedLayer }: { selectedLayer: string }) {
     return () => mapInstance.current?.remove();
   }, []);
 
+  // Load GeoJSON data and add it to the map
   useEffect(() => {
     if (!mapInstance.current) return;
     const map = mapInstance.current;
 
     async function loadGeoJSON() {
       try {
+        setLoading(true); 
         const response = await fetch(`/${selectedLayer}.json`);
         const data = await response.json();
 
@@ -75,40 +94,155 @@ export default function Map({ selectedLayer }: { selectedLayer: string }) {
             },
           });
 
-         
           map.addLayer({
             id: "geojson-layer-borders",
             type: "line",
             source: "geojson-layer",
             paint: {
-              "line-color": "#000000", 
+              "line-color": "#000000",
               "line-width": 1.5,
-              "line-opacity": 0.8, 
+              "line-opacity": 0.8,
             },
             layout: {
               "line-join": "round",
-              "line-cap": "round", 
+              "line-cap": "round",
             },
           });
         }
       } catch (error) {
         console.error("Error loading GeoJSON:", error);
+      } finally {
+        setLoading(false); 
       }
     }
-
-    map.on("mouseenter", `geojson-layer`, () => {
-      map.getCanvas().style.cursor = "pointer";
-    });
-
-    map.on("mouseleave", `geojson-layer`, () => {
-      map.getCanvas().style.cursor = "";
-    });
 
     if (map.isStyleLoaded()) {
       loadGeoJSON();
     } else {
       map.once("style.load", loadGeoJSON);
     }
+
+    map.on("click", "geojson-layer", (e) => {
+      if (e.features && e.features.length > 0) {
+        const properties = e.features[0].properties;
+
+        if (properties.adm1_en) {
+          const clickedRegion = properties.adm1_en;
+          setFocusedRegion(clickedRegion);
+          onTileClick(properties);
+
+          if (map.getLayer("focused-region-layer")) {
+            map.removeLayer("focused-region-layer");
+          }
+          if (map.getSource("focused-region-source")) {
+            map.removeSource("focused-region-source");
+          }
+
+          const fullRegionFeatures = map.querySourceFeatures("geojson-layer", {
+            sourceLayer: "geojson-layer",
+            filter: ["==", "adm1_en", clickedRegion],
+          });
+
+          if (fullRegionFeatures.length > 0) {
+            map.flyTo({
+              center: e.lngLat,
+              zoom: 7,
+              speed: 1.2,
+            });
+
+            map.addSource("focused-region-source", {
+              type: "geojson",
+              data: {
+                type: "FeatureCollection",
+                features: fullRegionFeatures.map((f) => f.toJSON()),
+              },
+            });
+
+            map.addLayer({
+              id: "focused-region-layer",
+              type: "fill",
+              source: "focused-region-source",
+              paint: {
+                "fill-color": "#FF5733",
+                "fill-opacity": 0.7,
+              },
+            });
+          }
+        } else if (properties.NAME_ENGLI) {
+          const clickedCountry = properties.NAME_ENGLI;
+          setFocusedRegion(clickedCountry); 
+          onTileClick(properties);
+
+          if (map.getLayer("focused-country-layer")) {
+            map.removeLayer("focused-country-layer");
+          }
+          if (map.getSource("focused-country-source")) {
+            map.removeSource("focused-country-source");
+          }
+
+          const fullCountryFeatures = map.querySourceFeatures("geojson-layer", {
+            sourceLayer: "geojson-layer",
+            filter: ["==", "NAME_ENGLI", clickedCountry],
+          });
+
+          if (fullCountryFeatures.length > 0) {
+            map.flyTo({
+              center: e.lngLat,
+              zoom: 5, 
+              speed: 1.2,
+            });
+
+            map.addSource("focused-country-source", {
+              type: "geojson",
+              data: {
+                type: "FeatureCollection",
+                features: fullCountryFeatures.map((f) => f.toJSON()),
+              },
+            });
+
+            map.addLayer({
+              id: "focused-country-layer",
+              type: "fill",
+              source: "focused-country-source",
+              paint: {
+                "fill-color": "#FF5733", 
+                "fill-opacity": 0.7,
+              },
+            });
+          }
+        }
+      }
+    });
+
+    map.on("click", (e) => {
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: ["geojson-layer"],
+      });
+      if (features.length === 0) {
+        setFocusedRegion(null);
+        onTileClick(null);
+        if (map.getLayer("focused-region-layer")) {
+          map.removeLayer("focused-region-layer");
+        }
+        if (map.getSource("focused-region-source")) {
+          map.removeSource("focused-region-source");
+        }
+        if (map.getLayer("focused-country-layer")) {
+          map.removeLayer("focused-country-layer");
+        }
+        if (map.getSource("focused-country-source")) {
+          map.removeSource("focused-country-source");
+        }
+      }
+    });
+
+    map.on("mouseenter", "geojson-layer", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "geojson-layer", () => {
+      map.getCanvas().style.cursor = "";
+    });
 
     return () => {
       if (map.getLayer("geojson-layer")) {
@@ -120,8 +254,31 @@ export default function Map({ selectedLayer }: { selectedLayer: string }) {
       if (map.getSource("geojson-layer")) {
         map.removeSource("geojson-layer");
       }
+      if (map.getLayer("focused-region-layer")) {
+        map.removeLayer("focused-region-layer");
+      }
+      if (map.getSource("focused-region-source")) {
+        map.removeSource("focused-region-source");
+      }
+      if (map.getLayer("focused-country-layer")) {
+        map.removeLayer("focused-country-layer");
+      }
+      if (map.getSource("focused-country-source")) {
+        map.removeSource("focused-country-source");
+      }
     };
   }, [selectedLayer]);
 
-  return <div ref={mapContainer} className="w-full h-screen" />;
+  return (
+    <div className="relative w-full h-screen">
+      {/* Skeleton UI */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+          <div className="animate-pulse text-gray-500">Loading map...</div>
+        </div>
+      )}
+      {/* Map Container */}
+      <div ref={mapContainer} className="w-full h-full" />
+    </div>
+  );
 }
