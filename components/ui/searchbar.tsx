@@ -18,6 +18,8 @@ export default function SearchBar() {
           placeholder="Type a command or search..."
           className="rounded-lg px-4 py-2 bg-transparent text-white placeholder-gray-400" 
         />
+        <CommandGroup heading="Philippines">
+    </CommandGroup>
       </Command>
     </div>
   );

@@ -24,7 +24,6 @@ export default function Page() {
       {clickedTileData && (
         <div style={{ right: "2rem" }} className="absolute top-5">
         <RightSidebar
-          data={clickedTileData}
           onClose={() => setClickedTileData(null)} />
           </div>
       )} 
